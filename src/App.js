@@ -35,7 +35,7 @@ const App = () => {
     }
 
     const { latitude, longitude } = location;
-
+    console.log(apiKey)
     try {
       const response = await axios.get(
         `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=restaurant&key=${apiKey}`
