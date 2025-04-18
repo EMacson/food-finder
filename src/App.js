@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+//const router = require('express').Router()
+//module.exports = router
 //import config from './conf.js';
+
 const apiKey = process.env.REACT_APP_API_KEY;
 
 const App = () => {
@@ -20,6 +23,7 @@ const App = () => {
         const { latitude, longitude } = position.coords;
         setLocation({ latitude, longitude });
         setError(null); // clear any previous error
+        
       },
       (err) => {
         setError(`Error: ${err.message}`);
@@ -29,22 +33,56 @@ const App = () => {
   };
 
   const getNearbyPlaces = async () => {
+    let data = {
+      "includedTypes": ["restaurant"],
+      "maxResultCount": 10,
+      "locationRestriction": {
+        "circle": {
+          "center": {
+            "latitude": location.latitude,
+            "longitude": location.longitude},
+          "radius": 500.0
+        }
+      }
+    };
+
+    fetch("https://places.googleapis.com/v1/places:searchNearby", {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.displayName'
+      }, 
+      body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+    /*
     if (!location) {
       setError('Please get your location first!');
       return;
     }
 
     const { latitude, longitude } = location;
-    console.log(apiKey)
+
     try {
+      // Make a request to your backend API to fetch nearby places
       const response = await axios.get(
-        `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=restaurant&key=${apiKey}`
+        `/api/nearby?lat=${latitude}&lng=${longitude}`
       );
-      setPlaces(response.data.results);
+
+      if (response.data.status === "OK") {
+        setPlaces(response.data.results);
+        setError(null);
+      } else {
+        setError(`Failed to fetch nearby places: ${response.data.status}`);
+      }
     } catch (error) {
       setError('Failed to fetch places');
       console.error(error);
     }
+    */
   };
 
   return (
