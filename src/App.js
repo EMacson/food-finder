@@ -33,6 +33,7 @@ const App = () => {
   };
 
   const getNearbyPlaces = async () => {
+    console.log(apiKey);
     let data = {
       "includedTypes": ["restaurant"],
       "maxResultCount": 10,
