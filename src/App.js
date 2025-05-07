@@ -33,7 +33,64 @@ const App = () => {
   };
 
   const getNearbyPlaces = async () => {
-    
+    if (!location) {
+      setError('Please get your location first!');
+      return;
+    }
+
+    const data = {
+      "includedTypes": ["restaurant"],
+      "maxResultCount": 10,
+      "locationRestriction": {
+        "circle": {
+          "center": {
+            "latitude": location.latitude,
+            "longitude": location.longitude
+          },
+          "radius": 500.0
+        }
+      }
+    };
+
+    try {
+      const response = await fetch("https://places.googleapis.com/v1/places:searchNearby", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.displayName,places.location,places.formattedAddress,places.primaryType,places.rating,places.websiteUri'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch places');
+      }
+
+      const result = await response.json();
+      
+
+      if (result && result.places) {
+        console.log(result.places.length);
+        //console.log('Type of result.places:', Array.isArray(result.places));
+        for(let i = 0; i < result.places.length; i++){
+          console.log(result.places[i]);
+        }
+        setPlaces(result.places); // Update state with places
+        //console.log(places);
+        //for(let i = 0; i < places.length; i++){
+          //console.log(places[i]);
+        //}
+        setError(null); // Clear any previous errors
+      } else {
+        setPlaces([]); // No places found
+        setError('No places found nearby.');
+      }
+    } catch (error) {
+      setError('Failed to fetch places');
+      console.error(error);
+    }
+    /*
     let data = {
       "includedTypes": ["restaurant"],
       "maxResultCount": 10,
@@ -58,7 +115,9 @@ const App = () => {
     })
     .then(response => response.json())
     .then(data => console.log(data))
+    .then(setPlaces(data))
     .catch(error => console.error('Error:', error));
+    */
     /*
     if (!location) {
       setError('Please get your location first!');
@@ -118,19 +177,39 @@ const App = () => {
         Get Nearby Places
       </button>
 
-      <div className="mt-4">
-        {places.length > 0 && (
-          <ul>
-            {places.map((place, index) => (
-              <li key={index}>
-                <h3 className="text-lg font-bold">{place.name}</h3>
-                <p>{place.vicinity}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-        {places.length === 0 && location && <p>No places found nearby.</p>}
-      </div>
+      <div id="display-names" className="mt-4">
+  {places.length > 0 ? (
+    <ul className="space-y-4">
+      {places.map((place, index) => (
+        <li key={index} className="border p-4 rounded shadow">
+          <h3 className="text-lg font-semibold">
+            {place.displayName?.text || 'No Name'}
+          </h3>
+          <p>
+            <strong>Address:</strong> {place.formattedAddress || 'N/A'}
+          </p>
+          <p>
+            <strong>Rating:</strong> {place.rating ? `${place.rating} ⭐` : 'No rating'}
+          </p>
+          {place.websiteUri && (
+            <p>
+              <a
+                href={place.websiteUri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 underline"
+              >
+                Visit website
+              </a>
+            </p>
+          )}
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p>No places loaded yet.</p>
+  )}
+</div>
     </div>
   );
 };
